@@ -16,9 +16,23 @@
         gap: 30px;
         margin-top: 30px;
     }
+    .wheel-wrapper {
+        position: relative;
+    }
     canvas {
         background: #222;
         border-radius: 50%;
+    }
+    .arrow {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-left: 15px solid transparent;
+        border-right: 15px solid transparent;
+        border-bottom: 25px solid yellow;
+        transform: translate(-50%, -135px);
     }
     button {
         margin: 10px;
@@ -39,9 +53,18 @@
 
 <h1>WoW DPS Spin-the-Wheel</h1>
 <div class="wheel-container">
-    <canvas id="wheel1" width="250" height="250"></canvas>
-    <canvas id="wheel2" width="250" height="250"></canvas>
-    <canvas id="wheel3" width="250" height="250"></canvas>
+    <div class="wheel-wrapper">
+        <div class="arrow"></div>
+        <canvas id="wheel1" width="250" height="250"></canvas>
+    </div>
+    <div class="wheel-wrapper">
+        <div class="arrow"></div>
+        <canvas id="wheel2" width="250" height="250"></canvas>
+    </div>
+    <div class="wheel-wrapper">
+        <div class="arrow"></div>
+        <canvas id="wheel3" width="250" height="250"></canvas>
+    </div>
 </div>
 
 <div>
@@ -77,10 +100,26 @@ const specsByClass = {
     "Hunter": ["Beast Mastery", "Marksmanship", "Survival"]
 };
 
+const classColors = {
+    "Warrior": "#C79C6E",
+    "Paladin": "#F58CBA",
+    "Hunter": "#ABD473",
+    "Rogue": "#FFF569",
+    "Priest": "#FFFFFF",
+    "Death Knight": "#C41F3B",
+    "Shaman": "#0070DE",
+    "Mage": "#69CCF0",
+    "Warlock": "#9482C9",
+    "Monk": "#00FF96",
+    "Druid": "#FF7D0A",
+    "Demon Hunter": "#A330C9",
+    "Evoker": "#33937F"
+};
+
 let wheel1Choice = null;
 let wheel2Choice = null;
 
-function drawWheel(canvasId, items) {
+function drawWheel(canvasId, items, isClassWheel=false) {
     const canvas = document.getElementById(canvasId);
     const ctx = canvas.getContext("2d");
     const arc = (2 * Math.PI) / items.length;
@@ -88,7 +127,7 @@ function drawWheel(canvasId, items) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     for (let i = 0; i < items.length; i++) {
         ctx.beginPath();
-        ctx.fillStyle = i % 2 === 0 ? "#ff4d4d" : "#ff6633";
+        ctx.fillStyle = isClassWheel && classColors[items[i]] ? classColors[items[i]] : (i % 2 === 0 ? "#ff4d4d" : "#ff6633");
         ctx.moveTo(125, 125);
         ctx.arc(125, 125, 125, i * arc, (i + 1) * arc);
         ctx.lineTo(125, 125);
@@ -113,21 +152,21 @@ function spinWheel(stage) {
     if (!items.length) return;
 
     const arc = (2 * Math.PI) / items.length;
-    const spinAngle = Math.random() * 2 * Math.PI + 10 * Math.PI; // Random + extra spins
+    const spinAngle = Math.random() * 2 * Math.PI + 10 * Math.PI;
     let angle = 0;
-    const duration = 4000; // 4 seconds spin
+    const duration = 4000;
     const start = performance.now();
 
     function animate(timestamp) {
         const progress = Math.min((timestamp - start) / duration, 1);
-        const easedProgress = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+        const easedProgress = 1 - Math.pow(1 - progress, 3);
         angle = easedProgress * spinAngle;
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.translate(125, 125);
         ctx.rotate(angle);
         ctx.translate(-125, -125);
-        drawWheel(`wheel${stage}`, items);
+        drawWheel(`wheel${stage}`, items, stage === 2);
 
         if (progress < 1) {
             requestAnimationFrame(animate);
@@ -137,7 +176,7 @@ function spinWheel(stage) {
             if (stage === 1) {
                 wheel1Choice = result;
                 document.getElementById("result1").innerText = `Spin #1 Result: ${result}`;
-                drawWheel("wheel2", classesByType[result]);
+                drawWheel("wheel2", classesByType[result], true);
             }
             if (stage === 2) {
                 wheel2Choice = result;
@@ -153,7 +192,6 @@ function spinWheel(stage) {
     requestAnimationFrame(animate);
 }
 
-// Initial draw
 drawWheel("wheel1", dpsTypes);
 drawWheel("wheel2", []);
 drawWheel("wheel3", []);
