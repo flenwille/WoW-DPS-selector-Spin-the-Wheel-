@@ -2,199 +2,196 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WoW DPS Spin-the-Wheel</title>
 <style>
     body {
-        background-color: #16161d;
+        background-color: #0d0d14;
         color: white;
-        text-align: center;
         font-family: Arial, sans-serif;
+        text-align: center;
+        margin: 0;
+        padding: 20px;
+    }
+    h1 {
+        font-size: 2em;
+        margin-bottom: 20px;
     }
     .wheel-container {
         display: flex;
         justify-content: center;
-        gap: 30px;
-        margin-top: 30px;
-    }
-    .wheel-wrapper {
+        gap: 40px;
+        margin-bottom: 20px;
         position: relative;
     }
     canvas {
-        background: #222;
+        background: transparent;
         border-radius: 50%;
     }
     .arrow {
-        position: absolute;
-        top: 50%;
-        left: 50%;
         width: 0;
         height: 0;
         border-left: 15px solid transparent;
         border-right: 15px solid transparent;
-        border-bottom: 25px solid yellow;
-        transform: translate(-50%, -135px);
+        border-bottom: 20px solid white;
+        position: absolute;
+        top: -25px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    .button-group {
+        margin: 20px 0;
     }
     button {
-        margin: 10px;
-        padding: 10px 20px;
-        background: #007bff;
+        background-color: #007bff;
         border: none;
-        border-radius: 8px;
         color: white;
+        padding: 10px 20px;
+        margin: 0 5px;
+        border-radius: 8px;
         cursor: pointer;
-        font-size: 16px;
+        font-size: 1em;
     }
     button:hover {
-        background: #0056b3;
+        background-color: #0056b3;
     }
 </style>
 </head>
 <body>
-
 <h1>WoW DPS Spin-the-Wheel</h1>
 <div class="wheel-container">
-    <div class="wheel-wrapper">
+    <div>
         <div class="arrow"></div>
-        <canvas id="wheel1" width="250" height="250"></canvas>
+        <canvas id="wheel1" width="200" height="200"></canvas>
     </div>
-    <div class="wheel-wrapper">
+    <div>
         <div class="arrow"></div>
-        <canvas id="wheel2" width="250" height="250"></canvas>
+        <canvas id="wheel2" width="200" height="200"></canvas>
     </div>
-    <div class="wheel-wrapper">
+    <div>
         <div class="arrow"></div>
-        <canvas id="wheel3" width="250" height="250"></canvas>
+        <canvas id="wheel3" width="200" height="200"></canvas>
     </div>
 </div>
-
-<div>
+<div class="button-group">
     <button onclick="spinWheel(1)">Spin #1: DPS Type</button>
     <button onclick="spinWheel(2)">Spin #2: Class</button>
     <button onclick="spinWheel(3)">Spin #3: Spec</button>
 </div>
-
 <p id="result1"></p>
 <p id="result2"></p>
 <p id="result3"></p>
 
 <script>
-const dpsTypes = ["Caster DPS", "Melee DPS", "Ranged DPS"];
-const classesByType = {
-    "Caster DPS": ["Mage", "Warlock", "Shaman", "Priest", "Druid", "Evoker"],
-    "Melee DPS": ["Warrior", "Rogue", "Paladin", "Death Knight", "Demon Hunter", "Monk", "Druid", "Shaman"],
-    "Ranged DPS": ["Hunter", "Mage", "Warlock", "Shaman", "Evoker"]
-};
-const specsByClass = {
-    "Mage": ["Fire", "Frost", "Arcane"],
-    "Warlock": ["Affliction", "Demonology", "Destruction"],
-    "Shaman": ["Elemental", "Enhancement"],
-    "Priest": ["Shadow"],
-    "Druid": ["Balance", "Feral"],
-    "Evoker": ["Devastation"],
-    "Warrior": ["Arms", "Fury"],
-    "Rogue": ["Assassination", "Outlaw", "Subtlety"],
-    "Paladin": ["Retribution"],
-    "Death Knight": ["Frost", "Unholy"],
-    "Demon Hunter": ["Havoc"],
-    "Monk": ["Windwalker"],
-    "Hunter": ["Beast Mastery", "Marksmanship", "Survival"]
-};
+const dpsTypes = ["Melee DPS", "Ranged DPS", "Caster DPS"];
+const classes = [
+    { name: "Warrior", color: "#C79C6E", specs: ["Arms", "Fury"] },
+    { name: "Paladin", color: "#F58CBA", specs: ["Retribution"] },
+    { name: "Hunter", color: "#ABD473", specs: ["Beast Mastery", "Marksmanship", "Survival"] },
+    { name: "Rogue", color: "#FFF569", specs: ["Assassination", "Outlaw", "Subtlety"] },
+    { name: "Priest", color: "#FFFFFF", specs: ["Shadow"] },
+    { name: "Death Knight", color: "#C41E3A", specs: ["Frost", "Unholy"] },
+    { name: "Shaman", color: "#0070DE", specs: ["Elemental", "Enhancement"] },
+    { name: "Mage", color: "#69CCF0", specs: ["Arcane", "Fire", "Frost"] },
+    { name: "Warlock", color: "#9482C9", specs: ["Affliction", "Demonology", "Destruction"] },
+    { name: "Monk", color: "#00FF96", specs: ["Windwalker"] },
+    { name: "Druid", color: "#FF7D0A", specs: ["Balance", "Feral"] },
+    { name: "Demon Hunter", color: "#A330C9", specs: ["Havoc"] },
+    { name: "Evoker", color: "#33937F", specs: ["Devastation"] }
+];
 
-const classColors = {
-    "Warrior": "#C79C6E",
-    "Paladin": "#F58CBA",
-    "Hunter": "#ABD473",
-    "Rogue": "#FFF569",
-    "Priest": "#FFFFFF",
-    "Death Knight": "#C41F3B",
-    "Shaman": "#0070DE",
-    "Mage": "#69CCF0",
-    "Warlock": "#9482C9",
-    "Monk": "#00FF96",
-    "Druid": "#FF7D0A",
-    "Demon Hunter": "#A330C9",
-    "Evoker": "#33937F"
-};
+let selectedDps = null;
+let selectedClass = null;
 
-let wheel1Choice = null;
-let wheel2Choice = null;
-
-function drawWheel(canvasId, items, isClassWheel=false) {
+function drawWheel(canvasId, segments, colors) {
     const canvas = document.getElementById(canvasId);
-    const ctx = canvas.getContext("2d");
-    const arc = (2 * Math.PI) / items.length;
+    const ctx = canvas.getContext('2d');
+    const radius = canvas.width / 2;
+    const angle = 2 * Math.PI / segments.length;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    for (let i = 0; i < items.length; i++) {
+
+    segments.forEach((seg, i) => {
         ctx.beginPath();
-        ctx.fillStyle = isClassWheel && classColors[items[i]] ? classColors[items[i]] : (i % 2 === 0 ? "#ff4d4d" : "#ff6633");
-        ctx.moveTo(125, 125);
-        ctx.arc(125, 125, 125, i * arc, (i + 1) * arc);
-        ctx.lineTo(125, 125);
+        ctx.moveTo(radius, radius);
+        ctx.fillStyle = colors ? colors[i] : "#FF5733";
+        ctx.arc(radius, radius, radius, i * angle, (i + 1) * angle);
         ctx.fill();
         ctx.save();
-        ctx.translate(125, 125);
-        ctx.rotate(i * arc + arc / 2);
+        ctx.translate(radius, radius);
+        ctx.rotate(i * angle + angle / 2);
         ctx.fillStyle = "white";
+        ctx.font = "bold 14px Arial";
         ctx.textAlign = "right";
-        ctx.font = "14px Arial";
-        ctx.fillText(items[i], 115, 5);
+        ctx.fillText(seg, radius - 10, 5);
         ctx.restore();
-    }
+    });
 }
 
-function spinWheel(stage) {
-    const canvas = document.getElementById(`wheel${stage}`);
-    const ctx = canvas.getContext("2d");
-    const items = stage === 1 ? dpsTypes :
-                  stage === 2 ? classesByType[wheel1Choice] || [] :
-                  stage === 3 ? specsByClass[wheel2Choice] || [] : [];
-    if (!items.length) return;
+function spinWheel(wheelNumber) {
+    const canvas = document.getElementById(`wheel${wheelNumber}`);
+    const ctx = canvas.getContext('2d');
+    const radius = canvas.width / 2;
+    let segments, colors;
 
-    const arc = (2 * Math.PI) / items.length;
-    const spinAngle = Math.random() * 2 * Math.PI + 10 * Math.PI;
-    let angle = 0;
-    const duration = 4000;
-    const start = performance.now();
+    if (wheelNumber === 1) {
+        segments = dpsTypes;
+        colors = ["#FF5733", "#FF8D33", "#FFBD33"];
+    } else if (wheelNumber === 2) {
+        segments = classes.map(c => c.name);
+        colors = classes.map(c => c.color);
+    } else if (wheelNumber === 3) {
+        const classObj = classes.find(c => c.name === selectedClass);
+        if (!classObj) {
+            alert("Please spin for Class first!");
+            return;
+        }
+        segments = classObj.specs;
+        colors = Array(segments.length).fill(classObj.color);
+    }
 
-    function animate(timestamp) {
-        const progress = Math.min((timestamp - start) / duration, 1);
-        const easedProgress = 1 - Math.pow(1 - progress, 3);
-        angle = easedProgress * spinAngle;
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.translate(125, 125);
-        ctx.rotate(angle);
-        ctx.translate(-125, -125);
-        drawWheel(`wheel${stage}`, items, stage === 2);
+    let spinAngle = Math.random() * 360 + 1440; // random spin + multiple rotations
+    let currentAngle = 0;
+    let spinTime = 0;
+    const spinTimeTotal = 3000 + Math.random() * 2000; // 3–5 seconds spin
 
-        if (progress < 1) {
-            requestAnimationFrame(animate);
-        } else {
-            const selectedIndex = Math.floor(((2 * Math.PI) - (angle % (2 * Math.PI))) / arc) % items.length;
-            const result = items[selectedIndex];
-            if (stage === 1) {
-                wheel1Choice = result;
+    function rotate() {
+        spinTime += 30;
+        if (spinTime >= spinTimeTotal) {
+            const segmentAngle = 360 / segments.length;
+            const index = Math.floor(((360 - (currentAngle % 360)) % 360) / segmentAngle);
+            const result = segments[index];
+            if (wheelNumber === 1) {
+                selectedDps = result;
                 document.getElementById("result1").innerText = `Spin #1 Result: ${result}`;
-                drawWheel("wheel2", classesByType[result], true);
-            }
-            if (stage === 2) {
-                wheel2Choice = result;
+            } else if (wheelNumber === 2) {
+                selectedClass = result;
                 document.getElementById("result2").innerText = `Spin #2 Result: ${result}`;
-                drawWheel("wheel3", specsByClass[result]);
-            }
-            if (stage === 3) {
+            } else {
                 document.getElementById("result3").innerText = `Spin #3 Result: ${result}`;
             }
+            return;
         }
+        currentAngle += spinAngle / (spinTimeTotal / 30);
+        const offset = (currentAngle * Math.PI / 180) % (2 * Math.PI);
+        const segmentsRotated = [...segments.slice(), segments[0]];
+        const colorsRotated = [...colors.slice(), colors[0]];
+        ctx.save();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.translate(radius, radius);
+        ctx.rotate(offset);
+        ctx.translate(-radius, -radius);
+        drawWheel(canvas.id, segments, colors);
+        ctx.restore();
+        requestAnimationFrame(rotate);
     }
-
-    requestAnimationFrame(animate);
+    rotate();
 }
 
-drawWheel("wheel1", dpsTypes);
-drawWheel("wheel2", []);
-drawWheel("wheel3", []);
+// Draw initial wheels
+drawWheel("wheel1", dpsTypes, ["#FF5733", "#FF8D33", "#FFBD33"]);
+drawWheel("wheel2", classes.map(c => c.name), classes.map(c => c.color));
+drawWheel("wheel3", ["Spin DPS & Class first!"], ["#555"]);
 </script>
 </body>
 </html>
