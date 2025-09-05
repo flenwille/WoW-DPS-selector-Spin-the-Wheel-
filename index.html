@@ -1,250 +1,192 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WoW DPS Spin-the-Wheel</title>
 <style>
-  body {
-    background-color: #1e1e2f;
-    color: white;
-    font-family: Arial, sans-serif;
-    text-align: center;
-    padding: 20px;
-  }
-  canvas {
-    margin: 20px auto;
-    display: block;
-    background-color: #2c2c44;
-    border-radius: 50%;
-    box-shadow: 0 0 10px #000;
-  }
-  button {
-    margin: 10px;
-    padding: 10px 25px;
-    font-size: 16px;
-    background-color: #3498db;
-    border: none;
-    color: white;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  button:disabled {
-    background-color: #666;
-    cursor: default;
-  }
-  #result {
-    font-size: 20px;
-    margin-top: 20px;
-    min-height: 30px;
-  }
-  #arrow {
-    position: relative;
-    width: 400px;
-    height: 400px;
-    margin: 0 auto;
-  }
-  #arrow:after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    right: -12px;
-    width: 0;
-    height: 0;
-    border-top: 12px solid transparent;
-    border-bottom: 12px solid transparent;
-    border-left: 24px solid #e74c3c;
-    transform: translateY(-50%);
-    filter: drop-shadow(0 0 2px black);
-  }
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #1c1c2b;
+        color: white;
+        text-align: center;
+        margin: 0;
+        padding: 0;
+    }
+    h1 {
+        margin-top: 20px;
+    }
+    canvas {
+        margin-top: 20px;
+        background: #2b2b3c;
+        border-radius: 50%;
+    }
+    .buttons {
+        margin-top: 20px;
+    }
+    button {
+        background-color: #3498db;
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        margin: 5px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+    button:disabled {
+        background-color: #555;
+        cursor: not-allowed;
+    }
+    .result {
+        margin-top: 20px;
+        font-size: 20px;
+        font-weight: bold;
+    }
+    .result img {
+        width: 48px;
+        height: 48px;
+        vertical-align: middle;
+        margin-left: 10px;
+        border-radius: 8px;
+    }
 </style>
 </head>
 <body>
-
 <h1>WoW DPS Spin-the-Wheel</h1>
-
-<div id="arrow">
-  <canvas id="wheelCanvas" width="400" height="400"></canvas>
+<canvas id="wheel" width="400" height="400"></canvas>
+<div class="buttons">
+    <button id="spin1">Spin #1: DPS Type</button>
+    <button id="spin2" disabled>Spin #2: Class</button>
+    <button id="spin3" disabled>Spin #3: Spec</button>
 </div>
-
-<div>
-  <button id="spin1Btn">Spin #1: DPS Type</button>
-  <button id="spin2Btn" disabled>Spin #2: Class</button>
-  <button id="spin3Btn" disabled>Spin #3: Spec</button>
+<div class="result">
+    Result: <span id="result-text"></span>
+    <img id="result-icon" style="display:none;" alt="Result Icon">
 </div>
-
-<div id="result"></div>
 
 <script>
-  const typeOptions = ["Ranged DPS", "Melee DPS"];
+const canvas = document.getElementById("wheel");
+const ctx = canvas.getContext("2d");
+const resultText = document.getElementById("result-text");
+const resultIcon = document.getElementById("result-icon");
 
-  const classColors = {
-    "Hunter": "#AAD372",
-    "Druid": "#FF7D0A",
+const dpsTypes = ["Melee", "Ranged"];
+const classes = ["Warrior", "Mage", "Hunter", "Rogue", "Priest", "Shaman", "Paladin", "Druid", "Warlock", "Monk", "Demon Hunter", "Death Knight"];
+const specs = ["Spec 1", "Spec 2", "Spec 3"];
+
+const classColors = {
+    "Warrior": "#C79C6E",
+    "Mage": "#69CCF0",
+    "Hunter": "#ABD473",
+    "Rogue": "#FFF569",
     "Priest": "#FFFFFF",
     "Shaman": "#0070DE",
-    "Mage": "#69CCF0",
-    "Warlock": "#9482C9",
-    "Evoker": "#33937F",
-    "Warrior": "#C79C6E",
     "Paladin": "#F58CBA",
-    "Death Knight": "#C41F3B",
-    "Rogue": "#FFF569"
-  };
+    "Druid": "#FF7D0A",
+    "Warlock": "#9482C9",
+    "Monk": "#00FF96",
+    "Demon Hunter": "#A330C9",
+    "Death Knight": "#C41E3A"
+};
 
-  const dpsData = {
-    "Ranged DPS": {
-      "Hunter": ["Beast Mastery", "Marksmanship"],
-      "Druid": ["Balance"],
-      "Priest": ["Shadow"],
-      "Shaman": ["Elemental"],
-      "Mage": ["Fire", "Frost"],
-      "Warlock": ["Affliction", "Demonology", "Destruction"],
-      "Evoker": ["Devastation", "Augmentation"]
-    },
-    "Melee DPS": {
-      "Warrior": ["Arms", "Fury"],
-      "Paladin": ["Retribution"],
-      "Death Knight": ["Unholy", "Frost"],
-      "Shaman": ["Enhancement"],
-      "Druid": ["Feral"],
-      "Rogue": ["Outlaw", "Subtlety", "Assassination"],
-      "Hunter": ["Survival"]
-    }
-  };
+const classIconsPath = "icons/classes/";
+const specIconsPath = "icons/specs/";
 
-  let selectedType = null;
-  let selectedClass = null;
+let spinning = false;
+let currentStage = 1;
+let currentSelection = "";
 
-  const canvas = document.getElementById("wheelCanvas");
-  const ctx = canvas.getContext("2d");
-  const centerX = canvas.width / 2;
-  const centerY = canvas.height / 2;
-  const radius = 180;
-
-  let currentOptions = [];
-  let spinning = false;
-  let currentRotation = 0;
-
-  function getClassColor(name) {
-    return classColors[name] || "#666666";
-  }
-
-  function drawWheel(options, colorByClass = false) {
+function drawWheel(items, colors) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const sliceAngle = 2 * Math.PI / options.length;
+    const numSegments = items.length;
+    const anglePerSegment = (2 * Math.PI) / numSegments;
+    for (let i = 0; i < numSegments; i++) {
+        const angle = i * anglePerSegment;
+        ctx.beginPath();
+        ctx.moveTo(canvas.width / 2, canvas.height / 2);
+        ctx.arc(canvas.width / 2, canvas.height / 2, canvas.width / 2, angle, angle + anglePerSegment);
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.fill();
+        ctx.save();
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate(angle + anglePerSegment / 2);
+        ctx.fillStyle = "#fff";
+        ctx.font = "16px Arial";
+        ctx.textAlign = "right";
+        ctx.fillText(items[i], canvas.width / 2 - 10, 5);
+        ctx.restore();
+    }
+}
 
-    options.forEach((opt, i) => {
-      const startAngle = i * sliceAngle + currentRotation;
-      const endAngle = startAngle + sliceAngle;
-      let fillColor = "#3498db";
-
-      if (colorByClass) {
-        fillColor = getClassColor(opt);
-      } else {
-        fillColor = opt === "Ranged DPS" ? "#3498db" : "#e74c3c";
-      }
-
-      ctx.beginPath();
-      ctx.moveTo(centerX, centerY);
-      ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-      ctx.closePath();
-      ctx.fillStyle = fillColor;
-      ctx.fill();
-      ctx.strokeStyle = "#222";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      ctx.save();
-      ctx.fillStyle = fillColor === "#FFFFFF" ? "#000" : "#fff";
-      ctx.translate(centerX, centerY);
-      const textAngle = startAngle + sliceAngle / 2;
-      ctx.rotate(textAngle);
-      ctx.textAlign = "right";
-      ctx.font = "bold 16px Arial";
-      ctx.fillText(opt, radius - 10, 8);
-      ctx.restore();
-    });
-  }
-
-  function spinWheel(options, colorByClass, callback) {
+function spinWheel(items, colors, callback) {
     if (spinning) return;
     spinning = true;
+    let spinTime = 0;
+    const spinDuration = 5000; // smoother and slightly longer spin (5 seconds)
+    const spinAngle = Math.random() * 2 * Math.PI * 5 + Math.PI * 10; 
+    const startAngle = 0;
 
-    const spins = 5 + Math.floor(Math.random() * 5);
-    const sliceAngle = 2 * Math.PI / options.length;
-    const chosenIndex = Math.floor(Math.random() * options.length);
-    const targetRotation = (2 * Math.PI * spins) - (sliceAngle * chosenIndex);
-
-    const duration = 5000; // 5 seconds (longer spin)
-    const startTime = performance.now();
-
-    function animate(time) {
-      let elapsed = time - startTime;
-      if (elapsed > duration) elapsed = duration;
-
-      const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
-      const progress = easeOutCubic(elapsed / duration);
-
-      currentRotation = progress * targetRotation;
-
-      drawWheel(options, colorByClass);
-
-      if (elapsed < duration) {
-        requestAnimationFrame(animate);
-      } else {
-        spinning = false;
-        callback(chosenIndex);
-      }
+    function animate(timestamp) {
+        spinTime += 30;
+        const progress = Math.min(spinTime / spinDuration, 1);
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        const angle = startAngle + easeOut * spinAngle;
+        ctx.save();
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate(angle);
+        ctx.translate(-canvas.width / 2, -canvas.height / 2);
+        drawWheel(items, colors);
+        ctx.restore();
+        if (progress < 1) {
+            requestAnimationFrame(animate);
+        } else {
+            const index = Math.floor(items.length - (angle / (2 * Math.PI)) % items.length) % items.length;
+            spinning = false;
+            callback(items[index]);
+        }
     }
-
     requestAnimationFrame(animate);
-  }
+}
 
-  const spin1Btn = document.getElementById("spin1Btn");
-  const spin2Btn = document.getElementById("spin2Btn");
-  const spin3Btn = document.getElementById("spin3Btn");
-  const resultDiv = document.getElementById("result");
+function updateResult(stage, result) {
+    resultText.textContent = result;
+    let iconPath = "";
+    if (stage === 2) iconPath = `${classIconsPath}${result.toLowerCase().replace(/\s/g, '')}.png`;
+    if (stage === 3) iconPath = `${specIconsPath}${result.toLowerCase().replace(/\s/g, '')}.png`;
+    if (iconPath) {
+        resultIcon.src = iconPath;
+        resultIcon.style.display = "inline-block";
+    } else {
+        resultIcon.style.display = "none";
+    }
+}
 
-  currentOptions = typeOptions;
-  currentRotation = 0;
-  drawWheel(currentOptions, false);
-
-  spin1Btn.addEventListener("click", () => {
-    spinWheel(typeOptions, false, (index) => {
-      selectedType = typeOptions[index];
-      resultDiv.textContent = `Spin #1 Result: ${selectedType}`;
-      spin2Btn.disabled = false;
-      spin3Btn.disabled = true;
-      selectedClass = null;
-      currentOptions = Object.keys(dpsData[selectedType]);
-      currentRotation = 0;
-      drawWheel(currentOptions, true);
+document.getElementById("spin1").addEventListener("click", () => {
+    spinWheel(dpsTypes, ["#e74c3c", "#3498db"], (selected) => {
+        currentSelection = selected;
+        currentStage = 2;
+        updateResult(1, selected);
+        document.getElementById("spin2").disabled = false;
     });
-  });
+});
 
-  spin2Btn.addEventListener("click", () => {
-    if (!selectedType) return;
-    const classes = Object.keys(dpsData[selectedType]);
-    spinWheel(classes, true, (index) => {
-      selectedClass = classes[index];
-      resultDiv.textContent = `Spin #2 Result: ${selectedClass}`;
-      spin3Btn.disabled = false;
-      currentOptions = dpsData[selectedType][selectedClass];
-      currentRotation = 0;
-      drawWheel(currentOptions, true);
+document.getElementById("spin2").addEventListener("click", () => {
+    spinWheel(classes, classes.map(cls => classColors[cls] || "#999"), (selected) => {
+        currentSelection = selected;
+        currentStage = 3;
+        updateResult(2, selected);
+        document.getElementById("spin3").disabled = false;
     });
-  });
+});
 
-  spin3Btn.addEventListener("click", () => {
-    if (!selectedClass) return;
-    const specs = dpsData[selectedType][selectedClass];
-    spinWheel(specs, true, (index) => {
-      const spec = specs[index];
-      resultDiv.textContent = `Spin #3 Result: ${spec}`;
+document.getElementById("spin3").addEventListener("click", () => {
+    spinWheel(specs, ["#9b59b6", "#8e44ad", "#6c3483"], (selected) => {
+        updateResult(3, selected);
     });
-  });
+});
+
+drawWheel(dpsTypes, ["#e74c3c", "#3498db"]);
 </script>
-
 </body>
 </html>
