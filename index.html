@@ -67,37 +67,74 @@ let selectedClass = null;
 const dpsTypes = ["Melee", "Ranged", "Caster"];
 const classData = {
   Melee: [
-    { name: "Warrior", icon: "icons/warrior.png" },
-    { name: "Rogue", icon: "icons/rogue.png" },
-    { name: "Death Knight", icon: "icons/deathknight.png" },
-    { name: "Demon Hunter", icon: "icons/demonhunter.png" },
-    { name: "Monk", icon: "icons/monk.png" }
+    { name: "Warrior", icon: "icons/classes/warrior.png" },
+    { name: "Rogue", icon: "icons/classes/rogue.png" },
+    { name: "Death Knight", icon: "icons/classes/deathknight.png" },
+    { name: "Demon Hunter", icon: "icons/classes/demonhunter.png" },
+    { name: "Monk", icon: "icons/classes/monk.png" }
   ],
   Ranged: [
-    { name: "Hunter", icon: "icons/hunter.png" },
-    { name: "Evoker", icon: "icons/evoker.png" }
+    { name: "Hunter", icon: "icons/classes/hunter.png" },
+    { name: "Evoker", icon: "icons/classes/evoker.png" }
   ],
   Caster: [
-    { name: "Mage", icon: "icons/mage.png" },
-    { name: "Warlock", icon: "icons/warlock.png" },
-    { name: "Priest", icon: "icons/priest.png" },
-    { name: "Shaman", icon: "icons/shaman.png" },
-    { name: "Druid", icon: "icons/druid.png" }
+    { name: "Mage", icon: "icons/classes/mage.png" },
+    { name: "Warlock", icon: "icons/classes/warlock.png" },
+    { name: "Priest", icon: "icons/classes/priest.png" },
+    { name: "Shaman", icon: "icons/classes/shaman.png" },
+    { name: "Druid", icon: "icons/classes/druid.png" }
   ]
 };
-const specs = {
-  Hunter: ["Beast Mastery", "Marksmanship", "Survival"],
-  Mage: ["Arcane", "Fire", "Frost"],
-  Warlock: ["Affliction", "Demonology", "Destruction"],
-  Priest: ["Shadow"],
-  Shaman: ["Elemental", "Enhancement"],
-  Druid: ["Balance", "Feral"],
-  Warrior: ["Arms", "Fury"],
-  Rogue: ["Assassination", "Outlaw", "Subtlety"],
-  "Death Knight": ["Frost", "Unholy"],
-  "Demon Hunter": ["Havoc"],
-  Monk: ["Windwalker"],
-  Evoker: ["Devastation", "Augmentation"]
+const specData = {
+  Hunter: [
+    { name: "Beast Mastery", icon: "icons/specs/beast_mastery.png" },
+    { name: "Marksmanship", icon: "icons/specs/marksmanship.png" },
+    { name: "Survival", icon: "icons/specs/survival.png" }
+  ],
+  Mage: [
+    { name: "Arcane", icon: "icons/specs/arcane.png" },
+    { name: "Fire", icon: "icons/specs/fire.png" },
+    { name: "Frost", icon: "icons/specs/frost.png" }
+  ],
+  Warlock: [
+    { name: "Affliction", icon: "icons/specs/affliction.png" },
+    { name: "Demonology", icon: "icons/specs/demonology.png" },
+    { name: "Destruction", icon: "icons/specs/destruction.png" }
+  ],
+  Priest: [
+    { name: "Shadow", icon: "icons/specs/shadow.png" }
+  ],
+  Shaman: [
+    { name: "Elemental", icon: "icons/specs/elemental.png" },
+    { name: "Enhancement", icon: "icons/specs/enhancement.png" }
+  ],
+  Druid: [
+    { name: "Balance", icon: "icons/specs/balance.png" },
+    { name: "Feral", icon: "icons/specs/feral.png" }
+  ],
+  Warrior: [
+    { name: "Arms", icon: "icons/specs/arms.png" },
+    { name: "Fury", icon: "icons/specs/fury.png" }
+  ],
+  Rogue: [
+    { name: "Assassination", icon: "icons/specs/assassination.png" },
+    { name: "Outlaw", icon: "icons/specs/outlaw.png" },
+    { name: "Subtlety", icon: "icons/specs/subtlety.png" }
+  ],
+  "Death Knight": [
+    { name: "Frost", icon: "icons/specs/dk_frost.png" },
+    { name: "Unholy", icon: "icons/specs/unholy.png" }
+  ],
+  "Demon Hunter": [
+    { name: "Havoc", icon: "icons/specs/havoc.png" }
+  ],
+  Monk: [
+    { name: "Windwalker", icon: "icons/specs/windwalker.png" }
+  ],
+  Evoker: [
+    { name: "Devastation", icon: "icons/specs/devastation.png" },
+    { name: "Augmentation", icon: "icons/specs/augmentation.png" }
+  ]
 };
 
 function drawWheel() {
@@ -146,13 +183,14 @@ function spinWheel() {
     ctx.restore();
     if (step >= 1) {
       clearInterval(spinInterval);
-      const result = slices[randomIndex].name;
-      document.getElementById('resultText').textContent = `Result: ${result}`;
+      const result = slices[randomIndex];
+      document.getElementById('resultText').innerHTML = `Result: ${result.name}` +
+        (result.icon ? ` <img src="${result.icon}" class="icon">` : "");
       if (currentStage === 1) {
-        selectedType = result;
+        selectedType = result.name;
         document.getElementById('spin2').disabled = false;
       } else if (currentStage === 2) {
-        selectedClass = result;
+        selectedClass = result.name;
         document.getElementById('spin3').disabled = false;
       }
     }
@@ -175,7 +213,7 @@ document.getElementById('spin2').addEventListener('click', () => {
 document.getElementById('spin3').addEventListener('click', () => {
   if (!selectedClass) return;
   currentStage = 3;
-  slices = specs[selectedClass].map(name => ({ name }));
+  slices = specData[selectedClass];
   spinWheel();
 });
 
