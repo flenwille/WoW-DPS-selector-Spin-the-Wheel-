@@ -1,192 +1,21 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WoW DPS Spin-the-Wheel</title>
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        background-color: #1c1c2b;
-        color: white;
-        text-align: center;
-        margin: 0;
-        padding: 0;
-    }
-    h1 {
-        margin-top: 20px;
-    }
-    canvas {
-        margin-top: 20px;
-        background: #2b2b3c;
-        border-radius: 50%;
-    }
-    .buttons {
-        margin-top: 20px;
-    }
-    button {
-        background-color: #3498db;
-        border: none;
-        color: white;
-        padding: 10px 20px;
-        margin: 5px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 16px;
-    }
-    button:disabled {
-        background-color: #555;
-        cursor: not-allowed;
-    }
-    .result {
-        margin-top: 20px;
-        font-size: 20px;
-        font-weight: bold;
-    }
-    .result img {
-        width: 48px;
-        height: 48px;
-        vertical-align: middle;
-        margin-left: 10px;
-        border-radius: 8px;
-    }
+  body { background-color: #1c1c2b; color: white; font-family: Arial, sans-serif; text-align: center; }
+  .wheel { width: 300px; height: 300px; margin: 20px auto; border: 10px solid #333; border-radius: 50%; position: relative; }
+  .icon { width: 50px; height: 50px; }
 </style>
 </head>
 <body>
 <h1>WoW DPS Spin-the-Wheel</h1>
-<canvas id="wheel" width="400" height="400"></canvas>
-<div class="buttons">
-    <button id="spin1">Spin #1: DPS Type</button>
-    <button id="spin2" disabled>Spin #2: Class</button>
-    <button id="spin3" disabled>Spin #3: Spec</button>
+<div class="wheel">
+  <img class="icon" src="icons/classes/warrior.png" alt="Warrior">
+  <img class="icon" src="icons/specs/arms.png" alt="Arms Spec">
 </div>
-<div class="result">
-    Result: <span id="result-text"></span>
-    <img id="result-icon" style="display:none;" alt="Result Icon">
-</div>
-
-<script>
-const canvas = document.getElementById("wheel");
-const ctx = canvas.getContext("2d");
-const resultText = document.getElementById("result-text");
-const resultIcon = document.getElementById("result-icon");
-
-const dpsTypes = ["Melee", "Ranged"];
-const classes = ["Warrior", "Mage", "Hunter", "Rogue", "Priest", "Shaman", "Paladin", "Druid", "Warlock", "Monk", "Demon Hunter", "Death Knight"];
-const specs = ["Spec 1", "Spec 2", "Spec 3"];
-
-const classColors = {
-    "Warrior": "#C79C6E",
-    "Mage": "#69CCF0",
-    "Hunter": "#ABD473",
-    "Rogue": "#FFF569",
-    "Priest": "#FFFFFF",
-    "Shaman": "#0070DE",
-    "Paladin": "#F58CBA",
-    "Druid": "#FF7D0A",
-    "Warlock": "#9482C9",
-    "Monk": "#00FF96",
-    "Demon Hunter": "#A330C9",
-    "Death Knight": "#C41E3A"
-};
-
-const classIconsPath = "icons/classes/";
-const specIconsPath = "icons/specs/";
-
-let spinning = false;
-let currentStage = 1;
-let currentSelection = "";
-
-function drawWheel(items, colors) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const numSegments = items.length;
-    const anglePerSegment = (2 * Math.PI) / numSegments;
-    for (let i = 0; i < numSegments; i++) {
-        const angle = i * anglePerSegment;
-        ctx.beginPath();
-        ctx.moveTo(canvas.width / 2, canvas.height / 2);
-        ctx.arc(canvas.width / 2, canvas.height / 2, canvas.width / 2, angle, angle + anglePerSegment);
-        ctx.fillStyle = colors[i % colors.length];
-        ctx.fill();
-        ctx.save();
-        ctx.translate(canvas.width / 2, canvas.height / 2);
-        ctx.rotate(angle + anglePerSegment / 2);
-        ctx.fillStyle = "#fff";
-        ctx.font = "16px Arial";
-        ctx.textAlign = "right";
-        ctx.fillText(items[i], canvas.width / 2 - 10, 5);
-        ctx.restore();
-    }
-}
-
-function spinWheel(items, colors, callback) {
-    if (spinning) return;
-    spinning = true;
-    let spinTime = 0;
-    const spinDuration = 5000; // smoother and slightly longer spin (5 seconds)
-    const spinAngle = Math.random() * 2 * Math.PI * 5 + Math.PI * 10; 
-    const startAngle = 0;
-
-    function animate(timestamp) {
-        spinTime += 30;
-        const progress = Math.min(spinTime / spinDuration, 1);
-        const easeOut = 1 - Math.pow(1 - progress, 3);
-        const angle = startAngle + easeOut * spinAngle;
-        ctx.save();
-        ctx.translate(canvas.width / 2, canvas.height / 2);
-        ctx.rotate(angle);
-        ctx.translate(-canvas.width / 2, -canvas.height / 2);
-        drawWheel(items, colors);
-        ctx.restore();
-        if (progress < 1) {
-            requestAnimationFrame(animate);
-        } else {
-            const index = Math.floor(items.length - (angle / (2 * Math.PI)) % items.length) % items.length;
-            spinning = false;
-            callback(items[index]);
-        }
-    }
-    requestAnimationFrame(animate);
-}
-
-function updateResult(stage, result) {
-    resultText.textContent = result;
-    let iconPath = "";
-    if (stage === 2) iconPath = `${classIconsPath}${result.toLowerCase().replace(/\s/g, '')}.png`;
-    if (stage === 3) iconPath = `${specIconsPath}${result.toLowerCase().replace(/\s/g, '')}.png`;
-    if (iconPath) {
-        resultIcon.src = iconPath;
-        resultIcon.style.display = "inline-block";
-    } else {
-        resultIcon.style.display = "none";
-    }
-}
-
-document.getElementById("spin1").addEventListener("click", () => {
-    spinWheel(dpsTypes, ["#e74c3c", "#3498db"], (selected) => {
-        currentSelection = selected;
-        currentStage = 2;
-        updateResult(1, selected);
-        document.getElementById("spin2").disabled = false;
-    });
-});
-
-document.getElementById("spin2").addEventListener("click", () => {
-    spinWheel(classes, classes.map(cls => classColors[cls] || "#999"), (selected) => {
-        currentSelection = selected;
-        currentStage = 3;
-        updateResult(2, selected);
-        document.getElementById("spin3").disabled = false;
-    });
-});
-
-document.getElementById("spin3").addEventListener("click", () => {
-    spinWheel(specs, ["#9b59b6", "#8e44ad", "#6c3483"], (selected) => {
-        updateResult(3, selected);
-    });
-});
-
-drawWheel(dpsTypes, ["#e74c3c", "#3498db"]);
-</script>
+<p>Spin to select your DPS class and spec!</p>
 </body>
 </html>
