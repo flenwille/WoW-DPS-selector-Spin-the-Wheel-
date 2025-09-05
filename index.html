@@ -42,7 +42,7 @@
 </head>
 <body>
   <h1>WoW DPS Spin-the-Wheel</h1>
-  <canvas id="wheel" width="400" height="400"></canvas>
+  <canvas id="wheel" width="450" height="450"></canvas>
   <br>
   <button onclick="spinWheel()">Spin</button>
   <div class="result" id="result"></div>
@@ -51,13 +51,19 @@
     const canvas = document.getElementById("wheel");
     const ctx = canvas.getContext("2d");
     const slices = [
-      { name: "Mage", color: "#5bc0de", icon: "https://wow.zamimg.com/images/wow/icons/large/classicon_mage.jpg" },
-      { name: "Warlock", color: "#9b59b6", icon: "https://wow.zamimg.com/images/wow/icons/large/classicon_warlock.jpg" },
-      { name: "Evoker", color: "#16a085", icon: "https://wow.zamimg.com/images/wow/icons/large/classicon_evoker.jpg" },
-      { name: "Hunter", color: "#7bed9f", icon: "https://wow.zamimg.com/images/wow/icons/large/classicon_hunter.jpg" },
-      { name: "Druid", color: "#e67e22", icon: "https://wow.zamimg.com/images/wow/icons/large/classicon_druid.jpg" },
-      { name: "Priest", color: "#ecf0f1", icon: "https://wow.zamimg.com/images/wow/icons/large/classicon_priest.jpg" },
-      { name: "Shaman", color: "#2980b9", icon: "https://wow.zamimg.com/images/wow/icons/large/classicon_shaman.jpg" }
+      { name: "Death Knight", color: "#C41F3B", icon: "https://wow.zamimg.com/images/wow/icons/large/classicon_deathknight.jpg" },
+      { name: "Demon Hunter", color: "#A330C9", icon: "https://wow.zamimg.com/images/wow/icons/large/classicon_demonhunter.jpg" },
+      { name: "Druid", color: "#FF7D0A", icon: "https://wow.zamimg.com/images/wow/icons/large/classicon_druid.jpg" },
+      { name: "Evoker", color: "#33937F", icon: "https://wow.zamimg.com/images/wow/icons/large/classicon_evoker.jpg" },
+      { name: "Hunter", color: "#ABD473", icon: "https://wow.zamimg.com/images/wow/icons/large/classicon_hunter.jpg" },
+      { name: "Mage", color: "#69CCF0", icon: "https://wow.zamimg.com/images/wow/icons/large/classicon_mage.jpg" },
+      { name: "Monk", color: "#00FF96", icon: "https://wow.zamimg.com/images/wow/icons/large/classicon_monk.jpg" },
+      { name: "Paladin", color: "#F58CBA", icon: "https://wow.zamimg.com/images/wow/icons/large/classicon_paladin.jpg" },
+      { name: "Priest", color: "#FFFFFF", icon: "https://wow.zamimg.com/images/wow/icons/large/classicon_priest.jpg" },
+      { name: "Rogue", color: "#FFF569", icon: "https://wow.zamimg.com/images/wow/icons/large/classicon_rogue.jpg" },
+      { name: "Shaman", color: "#0070DE", icon: "https://wow.zamimg.com/images/wow/icons/large/classicon_shaman.jpg" },
+      { name: "Warlock", color: "#9482C9", icon: "https://wow.zamimg.com/images/wow/icons/large/classicon_warlock.jpg" },
+      { name: "Warrior", color: "#C79C6E", icon: "https://wow.zamimg.com/images/wow/icons/large/classicon_warrior.jpg" }
     ];
     const sliceAngle = (2 * Math.PI) / slices.length;
     let currentAngle = 0;
@@ -80,7 +86,7 @@
 
         // Draw icon
         const midAngle = startAngle + sliceAngle / 2;
-        const iconSize = 40;
+        const iconSize = 36;
         const iconX = radius + Math.cos(midAngle) * (radius * 0.55) - iconSize / 2;
         const iconY = radius + Math.sin(midAngle) * (radius * 0.55) - iconSize / 2;
         const img = new Image();
@@ -93,8 +99,8 @@
         ctx.save();
         ctx.translate(radius, radius);
         ctx.rotate(midAngle);
-        ctx.fillStyle = "black";
-        ctx.font = "16px Arial";
+        ctx.fillStyle = "#000";
+        ctx.font = "14px Arial";
         ctx.textAlign = "right";
         ctx.fillText(slice.name, radius * 0.8, 5);
         ctx.restore();
@@ -116,7 +122,7 @@
       const spins = Math.floor(Math.random() * 3) + 3; // 3–5 full spins
       const randomSlice = Math.floor(Math.random() * slices.length);
       const finalAngle = (spins * 2 * Math.PI) + (randomSlice * sliceAngle) + sliceAngle / 2;
-      const duration = 4000;
+      const duration = 4500;
       const start = performance.now();
 
       function animate(time) {
