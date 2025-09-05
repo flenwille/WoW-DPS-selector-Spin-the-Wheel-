@@ -1,21 +1,297 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>WoW DPS Spin-the-Wheel</title>
 <style>
-  body { background-color: #1c1c2b; color: white; font-family: Arial, sans-serif; text-align: center; }
-  .wheel { width: 300px; height: 300px; margin: 20px auto; border: 10px solid #333; border-radius: 50%; position: relative; }
-  .icon { width: 50px; height: 50px; }
+  body {
+    background-color: #1e1e2f;
+    color: #f0f0f0;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 20px;
+  }
+  canvas {
+    margin: 20px auto;
+    display: block;
+    background-color: #2c2c44;
+    border-radius: 50%;
+    box-shadow: 0 0 15px #000;
+  }
+  button {
+    margin: 10px;
+    padding: 10px 25px;
+    font-size: 16px;
+    background-color: #3498db;
+    border: none;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  button:hover:enabled {
+    background-color: #2980b9;
+  }
+  button:disabled {
+    background-color: #666;
+    cursor: default;
+  }
+  #result {
+    font-size: 20px;
+    margin-top: 20px;
+    min-height: 30px;
+  }
+  #arrow {
+    position: relative;
+    width: 400px;
+    height: 400px;
+    margin: 0 auto;
+  }
+  #arrow:after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: -18px;
+    width: 0;
+    height: 0;
+    border-top: 12px solid transparent;
+    border-bottom: 12px solid transparent;
+    border-left: 24px solid #e74c3c;
+    transform: translateY(-50%);
+    filter: drop-shadow(0 0 2px black);
+  }
 </style>
 </head>
 <body>
+
 <h1>WoW DPS Spin-the-Wheel</h1>
-<div class="wheel">
-  <img class="icon" src="icons/classes/warrior.png" alt="Warrior">
-  <img class="icon" src="icons/specs/arms.png" alt="Arms Spec">
+
+<div id="arrow">
+  <canvas id="wheelCanvas" width="400" height="400"></canvas>
 </div>
-<p>Spin to select your DPS class and spec!</p>
+
+<div>
+  <button id="spin1Btn">Spin #1: DPS Type</button>
+  <button id="spin2Btn" disabled>Spin #2: Class</button>
+  <button id="spin3Btn" disabled>Spin #3: Spec</button>
+</div>
+
+<div id="result"></div>
+
+<script>
+const typeOptions = ["Ranged DPS", "Melee DPS"];
+
+const classIcons = {
+  "Hunter": "https://render.worldofwarcraft.com/class-icons/hunter.png",
+  "Druid": "https://render.worldofwarcraft.com/class-icons/druid.png",
+  "Priest": "https://render.worldofwarcraft.com/class-icons/priest.png",
+  "Shaman": "https://render.worldofwarcraft.com/class-icons/shaman.png",
+  "Mage": "https://render.worldofwarcraft.com/class-icons/mage.png",
+  "Warlock": "https://render.worldofwarcraft.com/class-icons/warlock.png",
+  "Evoker": "https://render.worldofwarcraft.com/class-icons/evoker.png",
+  "Warrior": "https://render.worldofwarcraft.com/class-icons/warrior.png",
+  "Paladin": "https://render.worldofwarcraft.com/class-icons/paladin.png",
+  "Death Knight": "https://render.worldofwarcraft.com/class-icons/deathknight.png",
+  "Rogue": "https://render.worldofwarcraft.com/class-icons/rogue.png"
+};
+
+const specIcons = {
+  "Beast Mastery": "https://render.worldofwarcraft.com/spec-icons/hunter-beastmastery.png",
+  "Marksmanship": "https://render.worldofwarcraft.com/spec-icons/hunter-marksmanship.png",
+  "Survival": "https://render.worldofwarcraft.com/spec-icons/hunter-survival.png",
+  "Balance": "https://render.worldofwarcraft.com/spec-icons/druid-balance.png",
+  "Feral": "https://render.worldofwarcraft.com/spec-icons/druid-feral.png",
+  "Shadow": "https://render.worldofwarcraft.com/spec-icons/priest-shadow.png",
+  "Elemental": "https://render.worldofwarcraft.com/spec-icons/shaman-elemental.png",
+  "Enhancement": "https://render.worldofwarcraft.com/spec-icons/shaman-enhancement.png",
+  "Fire": "https://render.worldofwarcraft.com/spec-icons/mage-fire.png",
+  "Frost": "https://render.worldofwarcraft.com/spec-icons/mage-frost.png",
+  "Affliction": "https://render.worldofwarcraft.com/spec-icons/warlock-affliction.png",
+  "Demonology": "https://render.worldofwarcraft.com/spec-icons/warlock-demonology.png",
+  "Destruction": "https://render.worldofwarcraft.com/spec-icons/warlock-destruction.png",
+  "Devastation": "https://render.worldofwarcraft.com/spec-icons/evoker-devastation.png",
+  "Augmentation": "https://render.worldofwarcraft.com/spec-icons/evoker-augmentation.png",
+  "Arms": "https://render.worldofwarcraft.com/spec-icons/warrior-arms.png",
+  "Fury": "https://render.worldofwarcraft.com/spec-icons/warrior-fury.png",
+  "Retribution": "https://render.worldofwarcraft.com/spec-icons/paladin-retribution.png",
+  "Unholy": "https://render.worldofwarcraft.com/spec-icons/deathknight-unholy.png",
+  "Assassination": "https://render.worldofwarcraft.com/spec-icons/rogue-assassination.png",
+  "Outlaw": "https://render.worldofwarcraft.com/spec-icons/rogue-outlaw.png",
+  "Subtlety": "https://render.worldofwarcraft.com/spec-icons/rogue-subtlety.png"
+};
+
+const dpsData = {
+  "Ranged DPS": {
+    "Hunter": ["Beast Mastery", "Marksmanship"],
+    "Druid": ["Balance"],
+    "Priest": ["Shadow"],
+    "Shaman": ["Elemental"],
+    "Mage": ["Fire", "Frost"],
+    "Warlock": ["Affliction", "Demonology", "Destruction"],
+    "Evoker": ["Devastation", "Augmentation"]
+  },
+  "Melee DPS": {
+    "Warrior": ["Arms", "Fury"],
+    "Paladin": ["Retribution"],
+    "Death Knight": ["Unholy", "Frost"],
+    "Shaman": ["Enhancement"],
+    "Druid": ["Feral"],
+    "Rogue": ["Outlaw", "Subtlety", "Assassination"],
+    "Hunter": ["Survival"]
+  }
+};
+
+let selectedType = null;
+let selectedClass = null;
+
+const canvas = document.getElementById("wheelCanvas");
+const ctx = canvas.getContext("2d");
+const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
+const radius = 180;
+
+let currentOptions = [];
+let spinning = false;
+let currentRotation = 0;
+
+function getClassColor(name) {
+  const colors = {
+    "Hunter": "#AAD372","Druid": "#FF7D0A","Priest": "#FFFFFF","Shaman": "#0070DE",
+    "Mage": "#69CCF0","Warlock": "#9482C9","Evoker": "#33937F","Warrior": "#C79C6E",
+    "Paladin": "#F58CBA","Death Knight": "#C41F3B","Rogue": "#FFF569"
+  };
+  return colors[name] || "#666666";
+}
+
+function drawWheel(options, withIcons = false, iconMap = null) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const sliceAngle = 2 * Math.PI / options.length;
+
+  options.forEach((opt, i) => {
+    const startAngle = i * sliceAngle + currentRotation;
+    const endAngle = startAngle + sliceAngle;
+
+    let fillColor = "#3498db";
+    if (withIcons) {
+      fillColor = getClassColor(opt) || "#3498db";
+    } else {
+      fillColor = opt === "Ranged DPS" ? "#3498db" : "#e74c3c";
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY);
+    ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+    ctx.closePath();
+    ctx.fillStyle = fillColor;
+    ctx.fill();
+    ctx.strokeStyle = "#222";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Text + Icon
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    const textAngle = startAngle + sliceAngle / 2;
+    ctx.rotate(textAngle);
+    ctx.textAlign = "right";
+    ctx.font = "bold 16px Arial";
+    ctx.fillStyle = (fillColor === "#FFFFFF") ? "#000" : "#fff";
+
+    let label = opt;
+    ctx.fillText(label, radius - 10, 8);
+
+    if (withIcons && iconMap && iconMap[opt]) {
+      const img = new Image();
+      img.src = iconMap[opt];
+      img.onload = () => {
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(textAngle);
+        ctx.drawImage(img, radius - 40, -12, 24, 24);
+        ctx.restore();
+      };
+    }
+    ctx.restore();
+  });
+}
+
+function spinWheel(options, withIcons, iconMap, callback) {
+  if (spinning) return;
+  spinning = true;
+
+  const spins = 7 + Math.floor(Math.random() * 5);
+  const sliceAngle = 2 * Math.PI / options.length;
+  const chosenIndex = Math.floor(Math.random() * options.length);
+  const targetRotation = (2 * Math.PI * spins) - (sliceAngle * chosenIndex);
+
+  const duration = 6000; // 6 seconds spin
+  const startTime = performance.now();
+
+  function animate(time) {
+    let elapsed = time - startTime;
+    if (elapsed > duration) elapsed = duration;
+
+    const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+    const progress = easeOutCubic(elapsed / duration);
+
+    currentRotation = progress * targetRotation;
+    drawWheel(options, withIcons, iconMap);
+
+    if (elapsed < duration) {
+      requestAnimationFrame(animate);
+    } else {
+      spinning = false;
+      callback(chosenIndex);
+    }
+  }
+
+  requestAnimationFrame(animate);
+}
+
+const spin1Btn = document.getElementById("spin1Btn");
+const spin2Btn = document.getElementById("spin2Btn");
+const spin3Btn = document.getElementById("spin3Btn");
+const resultDiv = document.getElementById("result");
+
+currentOptions = typeOptions;
+drawWheel(currentOptions);
+
+spin1Btn.addEventListener("click", () => {
+  spinWheel(typeOptions, false, null, (index) => {
+    selectedType = typeOptions[index];
+    resultDiv.textContent = `Spin #1 Result: ${selectedType}`;
+    spin2Btn.disabled = false;
+    spin3Btn.disabled = true;
+    selectedClass = null;
+    currentOptions = Object.keys(dpsData[selectedType]);
+    currentRotation = 0;
+    drawWheel(currentOptions, true, classIcons);
+  });
+});
+
+spin2Btn.addEventListener("click", () => {
+  if (!selectedType) return;
+  const classes = Object.keys(dpsData[selectedType]);
+  spinWheel(classes, true, classIcons, (index) => {
+    selectedClass = classes[index];
+    resultDiv.textContent = `Spin #2 Result: ${selectedClass}`;
+    spin3Btn.disabled = false;
+    currentOptions = dpsData[selectedType][selectedClass];
+    currentRotation = 0;
+    drawWheel(currentOptions, true, specIcons);
+  });
+});
+
+spin3Btn.addEventListener("click", () => {
+  if (!selectedClass) return;
+  const specs = dpsData[selectedType][selectedClass];
+  spinWheel(specs, true, specIcons, (index) => {
+    const spec = specs[index];
+    resultDiv.textContent = `Spin #3 Result: ${spec}`;
+  });
+});
+</script>
+
 </body>
 </html>
